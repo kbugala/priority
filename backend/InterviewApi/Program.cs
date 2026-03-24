@@ -40,7 +40,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Interview API v1");
+        options.RoutePrefix = "swagger";
     });
+
+    // Redirect root → Swagger UI in development
+    app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 }
 
 // Enable CORS
