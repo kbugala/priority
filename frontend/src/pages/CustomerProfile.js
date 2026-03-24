@@ -1,0 +1,204 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import RegisterVisitModal from '../components/RegisterVisitModal';
+import './CustomerProfile.css';
+
+const API = 'http://localhost:5000';
+
+function CustomerProfile() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isCreateMode = !id;
+
+  // Create mode
+  const [form, setForm] = useState({ name: '', email: '' });
+  const [formError, setFormError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // View mode
+  const [customer, setCustomer] = useState(null);
+  const [visitations, setVisitations] = useState([]);
+  const [loading, setLoading] = useState(!isCreateMode);
+  const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+
+  const fetchVisitations = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/visitation/customer/${id}`);
+      if (res.ok) setVisitations(await res.json());
+    } catch { /* silently ignore */ }
+  }, [id]);
+
+  useEffect(() => {
+    if (isCreateMode) return;
+    (async () => {
+      try {
+        const res = await fetch(`${API}/api/customer/${id}`);
+        if (!res.ok) throw new Error('Customer not found');
+        setCustomer(await res.json());
+        await fetchVisitations();
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id, isCreateMode, fetchVisitations]);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    setFormError('');
+    if (!form.name.trim()) return setFormError('Name is required.');
+    if (!form.email.trim()) return setFormError('Email is required.');
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API}/api/customer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: form.name, email: form.email }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to create customer');
+      }
+      const created = await res.json();
+      navigate(`/profile/${created.id}`);
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (isCreateMode) {
+    return (
+      <div className="cp-container">
+        <div className="cp-header">
+          <h1>Create Customer Profile</h1>
+        </div>
+        <div className="cp-card">
+          <form onSubmit={handleCreate} className="cp-form" noValidate>
+            {formError && <div className="cp-alert cp-alert-error">{formError}</div>}
+            <div className="cp-form-group">
+              <label htmlFor="cp-name">Full Name</label>
+              <input
+                id="cp-name"
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Enter full name"
+                autoFocus
+              />
+            </div>
+            <div className="cp-form-group">
+              <label htmlFor="cp-email">Email Address</label>
+              <input
+                id="cp-email"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder="Enter email address"
+              />
+            </div>
+            <button type="submit" className="cp-btn cp-btn-primary" disabled={submitting}>
+              {submitting ? 'Creating…' : 'Create Profile'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="cp-container">
+        <div className="cp-loading">Loading customer…</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="cp-container">
+        <div className="cp-alert cp-alert-error">{error}</div>
+      </div>
+    );
+  }
+
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const formatShort = (d) =>
+    new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  return (
+    <div className="cp-container">
+      <div className="cp-header">
+        <div>
+          <h1>{customer?.name}</h1>
+          <p className="cp-email">{customer?.email}</p>
+        </div>
+        <button className="cp-btn cp-btn-primary" onClick={() => setShowModal(true)}>
+          + Register Visit
+        </button>
+      </div>
+
+      <div className="cp-stats">
+        <div className="cp-stat">
+          <span className="cp-stat-label">Member Since</span>
+          <span className="cp-stat-value">
+            {customer?.registrationDate ? formatDate(customer.registrationDate) : '—'}
+          </span>
+        </div>
+        <div className="cp-stat">
+          <span className="cp-stat-label">Total Purchases</span>
+          <span className="cp-stat-value">{customer?.totalPurchases ?? 0}</span>
+        </div>
+        <div className="cp-stat">
+          <span className="cp-stat-label">Total Visits</span>
+          <span className="cp-stat-value">{visitations.length}</span>
+        </div>
+      </div>
+
+      <div className="cp-card">
+        <h2>Visitation History</h2>
+        {visitations.length === 0 ? (
+          <p className="cp-empty">No visits recorded yet.</p>
+        ) : (
+          <table className="cp-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Hotel</th>
+                <th>Visit Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visitations.map((v, idx) => (
+                <tr key={v.id}>
+                  <td>{idx + 1}</td>
+                  <td>{v.hotelName}</td>
+                  <td>{formatShort(v.visitDate)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {showModal && (
+        <RegisterVisitModal
+          customerId={parseInt(id, 10)}
+          onClose={() => setShowModal(false)}
+          onSuccess={() => {
+            setShowModal(false);
+            fetchVisitations();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+export default CustomerProfile;
