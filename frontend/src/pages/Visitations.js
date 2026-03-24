@@ -1,8 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Visitations.css';
 
 const API = 'http://localhost:5000';
+
+const MONTHS = [
+  { value: '01', label: 'January' },
+  { value: '02', label: 'February' },
+  { value: '03', label: 'March' },
+  { value: '04', label: 'April' },
+  { value: '05', label: 'May' },
+  { value: '06', label: 'June' },
+  { value: '07', label: 'July' },
+  { value: '08', label: 'August' },
+  { value: '09', label: 'September' },
+  { value: '10', label: 'October' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'December' },
+];
+
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: currentYear - 2019 }, (_, i) => String(2020 + i));
 
 function Visitations() {
   const navigate = useNavigate();
@@ -12,8 +30,11 @@ function Visitations() {
   const [searched, setSearched] = useState(false);
 
   const [selectedHotelIds, setSelectedHotelIds] = useState([]);
-  const [monthYear, setMonthYear] = useState(''); // input[type=month] gives "yyyy-MM"
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
   const [onlyLoyal, setOnlyLoyal] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     fetch(`${API}/api/hotel`)
@@ -22,10 +43,25 @@ function Visitations() {
       .catch(() => {});
   }, []);
 
+  // Close hotel dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
+        setDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   const toggleHotel = (id) =>
     setSelectedHotelIds((prev) =>
       prev.includes(id) ? prev.filter((h) => h !== id) : [...prev, id]
     );
+
+  const hotelButtonLabel =
+    selectedHotelIds.length === 0 || selectedHotelIds.length === hotels.length
+      ? 'All Hotels'
+      : `${selectedHotelIds.length} hotel${selectedHotelIds.length > 1 ? 's' : ''} selected`;
 
   const handleSearch = async () => {
     setLoading(true);
@@ -33,11 +69,8 @@ function Visitations() {
     try {
       const params = new URLSearchParams();
       if (selectedHotelIds.length > 0) params.set('hotelIds', selectedHotelIds.join(','));
-      if (monthYear) {
-        const [yyyy, mm] = monthYear.split('-');
-        params.set('year', yyyy);
-        params.set('month', String(parseInt(mm, 10))); // strip leading zero
-      }
+      if (selectedMonth) params.set('month', String(parseInt(selectedMonth, 10)));
+      if (selectedYear) params.set('year', selectedYear);
       if (onlyLoyal) params.set('onlyLoyal', 'true');
 
       const res = await fetch(`${API}/api/visitation?${params}`);
@@ -70,31 +103,62 @@ function Visitations() {
 
           <div className="vis-filter-group">
             <span className="vis-filter-label">Hotels</span>
-            <div className="vis-hotel-list">
-              {hotels.map((h) => (
-                <label key={h.id} className="vis-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={selectedHotelIds.includes(h.id)}
-                    onChange={() => toggleHotel(h.id)}
-                  />
-                  {h.name}
-                </label>
-              ))}
+            <div className="vis-dropdown-wrap" ref={dropdownRef}>
+              <button
+                type="button"
+                className="vis-dropdown-btn"
+                onClick={() => setDropdownOpen((o) => !o)}
+                aria-haspopup="listbox"
+                aria-expanded={dropdownOpen}
+              >
+                <span>{hotelButtonLabel}</span>
+                <span className="vis-dropdown-caret">{dropdownOpen ? '▲' : '▼'}</span>
+              </button>
+              {dropdownOpen && (
+                <div className="vis-dropdown-panel" role="listbox" aria-multiselectable="true">
+                  {hotels.map((h) => (
+                    <label key={h.id} className="vis-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={selectedHotelIds.includes(h.id)}
+                        onChange={() => toggleHotel(h.id)}
+                      />
+                      {h.name}
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="vis-filter-group">
-            <label className="vis-filter-label" htmlFor="vis-month">
-              Month / Year
-            </label>
-            <input
-              id="vis-month"
-              type="month"
-              value={monthYear}
-              onChange={(e) => setMonthYear(e.target.value)}
-              className="vis-month-input"
-            />
+            <span className="vis-filter-label">Month / Year</span>
+            <div className="vis-month-year">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="vis-select"
+                aria-label="Month"
+              >
+                <option value="">MM</option>
+                {MONTHS.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.value} – {m.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="vis-select"
+                aria-label="Year"
+              >
+                <option value="">YYYY</option>
+                {YEARS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="vis-filter-group">

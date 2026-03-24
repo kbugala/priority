@@ -54,10 +54,82 @@
   margin-bottom: 0.6rem;
 }
 
-.vis-hotel-list {
+/* Multi-select dropdown */
+.vis-dropdown-wrap {
+  position: relative;
+}
+
+.vis-dropdown-btn {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.vis-dropdown-btn:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+.vis-dropdown-caret {
+  font-size: 0.6rem;
+  color: #6c757d;
+  margin-left: 0.5rem;
+}
+
+.vis-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  padding: 0.4rem 0;
+}
+
+.vis-dropdown-panel .vis-checkbox-label {
+  padding: 0.4rem 0.75rem;
+  border-radius: 0;
+}
+
+.vis-dropdown-panel .vis-checkbox-label:hover {
+  background: #f8f9fa;
+}
+
+/* Month/Year selects */
+.vis-month-year {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.vis-select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.3rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.vis-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
 }
 
 .vis-checkbox-label {
@@ -81,20 +153,6 @@
   font-weight: 600;
 }
 
-.vis-month-input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  transition: border-color 0.15s;
-}
-
-.vis-month-input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
-}
 
 .vis-btn-search {
   width: 100%;

@@ -50,6 +50,8 @@ function CustomerProfile() {
     setFormError('');
     if (!form.name.trim()) return setFormError('Name is required.');
     if (!form.email.trim()) return setFormError('Email is required.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) return setFormError('Please enter a valid email address.');
 
     setSubmitting(true);
     try {
