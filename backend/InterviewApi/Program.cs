@@ -33,6 +33,9 @@ builder.Services.AddSingleton<InterviewApi.Services.IVisitationService, Intervie
 
 var app = builder.Build();
 
+// CORS must be the first middleware — before routing/swagger/endpoints
+app.UseCors("AllowFrontend");
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -46,9 +49,6 @@ if (app.Environment.IsDevelopment())
     // Redirect root → Swagger UI in development
     app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 }
-
-// Enable CORS
-app.UseCors("AllowFrontend");
 
 // Map controllers
 app.MapControllers();
