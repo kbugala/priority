@@ -15,12 +15,30 @@ function CustomerProfile() {
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // List mode (create page)
+  const [allCustomers, setAllCustomers] = useState([]);
+  const [listLoading, setListLoading] = useState(isCreateMode);
+
   // View mode
   const [customer, setCustomer] = useState(null);
   const [visitations, setVisitations] = useState([]);
   const [loading, setLoading] = useState(!isCreateMode);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
+
+  const fetchAllCustomers = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/customer/all`);
+      if (res.ok) setAllCustomers(await res.json());
+    } catch { /* ignore */ } finally {
+      setListLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isCreateMode) return;
+    fetchAllCustomers();
+  }, [isCreateMode, fetchAllCustomers]);
 
   const fetchVisitations = useCallback(async () => {
     try {
@@ -68,18 +86,23 @@ function CustomerProfile() {
       navigate(`/profile/${created.id}`);
     } catch (err) {
       setFormError(err.message);
-    } finally {
       setSubmitting(false);
     }
   };
+
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
   if (isCreateMode) {
     return (
       <div className="cp-container">
         <div className="cp-header">
-          <h1>Create Customer Profile</h1>
+          <h1>Customers</h1>
         </div>
-        <div className="cp-card">
+
+        {/* Create form */}
+        <div className="cp-card" style={{ marginBottom: '2rem' }}>
+          <h2>Create New Profile</h2>
           <form onSubmit={handleCreate} className="cp-form" noValidate>
             {formError && <div className="cp-alert cp-alert-error">{formError}</div>}
             <div className="cp-form-group">
@@ -108,6 +131,42 @@ function CustomerProfile() {
             </button>
           </form>
         </div>
+
+        {/* Customer list */}
+        <div className="cp-card">
+          <h2>All Customers</h2>
+          {listLoading ? (
+            <p className="cp-loading" style={{ padding: '1.5rem 0' }}>Loading customers…</p>
+          ) : allCustomers.length === 0 ? (
+            <p className="cp-empty">No customers yet. Create one above.</p>
+          ) : (
+            <table className="cp-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Member Since</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allCustomers.map((c, idx) => (
+                  <tr
+                    key={c.id}
+                    className="cp-row-link"
+                    onClick={() => navigate(`/profile/${c.id}`)}
+                    title={`View ${c.name}'s profile`}
+                  >
+                    <td>{idx + 1}</td>
+                    <td className="cp-name-cell">{c.name}</td>
+                    <td>{c.email}</td>
+                    <td>{formatDate(c.registrationDate)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     );
   }
@@ -128,7 +187,7 @@ function CustomerProfile() {
     );
   }
 
-  const formatDate = (d) =>
+  const formatDateLong = (d) =>
     new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const formatShort = (d) =>
@@ -150,7 +209,7 @@ function CustomerProfile() {
         <div className="cp-stat">
           <span className="cp-stat-label">Member Since</span>
           <span className="cp-stat-value">
-            {customer?.registrationDate ? formatDate(customer.registrationDate) : '—'}
+            {customer?.registrationDate ? formatDateLong(customer.registrationDate) : '—'}
           </span>
         </div>
         <div className="cp-stat">

@@ -148,6 +148,20 @@
   background-color: #0056b3;
 }
 
+.cp-row-link {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.cp-row-link:hover {
+  background: #e8f0fe;
+}
+
+.cp-name-cell {
+  color: #007bff;
+  font-weight: 600;
+}
+
 /* Table */
 .cp-table {
   width: 100%;
