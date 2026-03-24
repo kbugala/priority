@@ -32,6 +32,11 @@ public class CustomerController : ControllerBase
         }
     });
 
+    /// <summary>GET /api/customer/all — List all customers</summary>
+    [HttpGet("all")]
+    public ActionResult<List<Customer>> GetAllCustomers()
+        => Ok(_customerService.GetAll());
+
     /// <summary>POST /api/customer — Add a new customer</summary>
     [HttpPost]
     public ActionResult<Customer> AddCustomer([FromBody] CreateCustomerRequest request)

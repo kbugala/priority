@@ -55,6 +55,20 @@
       "email": "emma.garcia@example.com",
       "registrationDate": "2024-02-28T12:15:00Z",
       "totalPurchases": 22
+    },
+    {
+      "id": 9,
+      "name": "Kamil",
+      "email": "kamilbugala@outlook.com",
+      "registrationDate": "2026-03-24T12:35:20.633478Z",
+      "totalPurchases": 0
+    },
+    {
+      "id": 10,
+      "name": "Albert Ben Senyour",
+      "email": "test@test.com",
+      "registrationDate": "2026-03-24T12:35:52.629426Z",
+      "totalPurchases": 0
     }
   ]
 }
