@@ -26,8 +26,10 @@ builder.Services.AddCors(options =>
     });
 });
 
-// TODO: Register your services here using Dependency Injection
-// Example: builder.Services.AddScoped<ICustomerService, CustomerService>();
+// Services
+builder.Services.AddSingleton<InterviewApi.Services.ICustomerService, InterviewApi.Services.CustomerService>();
+builder.Services.AddSingleton<InterviewApi.Services.IHotelService, InterviewApi.Services.HotelService>();
+builder.Services.AddSingleton<InterviewApi.Services.IVisitationService, InterviewApi.Services.VisitationService>();
 
 var app = builder.Build();
 
